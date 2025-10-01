@@ -15,8 +15,9 @@ export default function HomeScreen() {
       </View>
       <Text style={styles.title}>Bem-vindo ao Agenda Pet!</Text>
       <Text style={styles.description}>
-        Agende banhos, tosas e outros serviços para o seu pet de forma simples e
-        rápida. Selecione abaixo como deseja acessar:
+        Agende banhos, tosas e outros cuidados para o seu pet de forma simples e
+        rápida. Aqui, seu melhor amigo está em boas mãos: seguro, bem cuidado e
+        cheio de carinho!
       </Text>
 
       <View>
