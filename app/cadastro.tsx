@@ -2,12 +2,13 @@ import { theme } from "@/components/theme/theme";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function CadastroScreen() {
@@ -19,11 +20,11 @@ export default function CadastroScreen() {
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
 
-  // Para usuário
+  // usuário
   const [nomePet, setNomePet] = useState("");
   const [especie, setEspecie] = useState("");
 
-  // Para gestor
+  // gestor
   const [petshop, setPetshop] = useState("");
   const [unidade, setUnidade] = useState("");
 
@@ -124,16 +125,19 @@ export default function CadastroScreen() {
         </>
       )}
 
-      <TouchableOpacity style={styles.button} onPress={handleCadastro}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => router.push("/agendamento")}
+      >
         <Text style={styles.buttonText}>Cadastrar</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        onPress={() => router.back()}
-        style={[styles.button, { backgroundColor: theme.colors.pink }]}
-      >
-        <Text style={styles.buttonText}>Voltar</Text>
-      </TouchableOpacity>
+      <View style={styles.loginRow}>
+        <Text style={styles.loginText}>Já tem uma conta?</Text>
+        <TouchableOpacity onPress={() => router.push("/login")}>
+          <Text style={styles.loginLink}> Fazer Login</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
@@ -143,7 +147,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     padding: 24,
-    backgroundColor: "#fff",
+    backgroundColor: theme.colors.background,
   },
   title: {
     fontSize: 24,
@@ -166,12 +170,35 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: "85%",
     alignSelf: "center",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   buttonText: {
     color: theme.colors.background,
     fontSize: 16,
     textAlign: "center",
     fontWeight: "600",
+  },
+  loginButton: {
+    textAlign: "center",
+    color: theme.colors.text,
+    fontStyle: "italic",
+    fontWeight: "500",
+  },
+  loginRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 5,
+  },
+  loginText: {
+    fontSize: 16,
+    fontWeight: "400",
+    color: theme.colors.text,
+  },
+  loginLink: {
+    fontSize: 16,
+    color: theme.colors.pink,
+    fontWeight: "700",
+    fontStyle: "italic",
   },
 });

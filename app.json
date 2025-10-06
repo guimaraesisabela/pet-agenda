@@ -14,7 +14,10 @@
     ],
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "android": {
+      "package": "com.oliveirazisabela.AgendaPet"
+    }
   },
   "android": {
     "adaptiveIcon": {

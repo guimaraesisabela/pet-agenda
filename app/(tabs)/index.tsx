@@ -23,9 +23,9 @@ export default function HomeScreen() {
       <View>
         <TouchableOpacity
           style={styles.buttons}
-          onPress={() => router.push("/login")}
+          onPress={() => router.push("/cadastro")}
         >
-          <Text style={{ color: theme.colors.background }}>Fazer Login</Text>
+          <Text style={{ color: theme.colors.background }}>Crie sua conta</Text>
         </TouchableOpacity>
       </View>
     </View>
