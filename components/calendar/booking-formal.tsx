@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Dropdown } from "react-native-element-dropdown";
 import { WarningModal } from "./atencao-modal";
 
 type BookingFormModalProps = {
@@ -42,6 +43,23 @@ export function BookingFormModal({
   const [tipoServico, setTipoServico] = useState("");
   const [warningVisible, setWarningVisible] = useState(false);
 
+  const especies = [
+    { label: "Cachorro", value: "cachorro" },
+    { label: "Gato", value: "gato" },
+    { label: "Coelho", value: "coelho" },
+    { label: "Hamster", value: "hamster" },
+    { label: "Pássaro", value: "passaro" },
+  ];
+
+  const servicos = [
+    { label: "Banho", value: "banho" },
+    { label: "Tosa", value: "tosa" },
+    { label: "Banho e Tosa Completa", value: "banho_tosa" },
+    { label: "Tosa Higiênica", value: "tosa_higienica" },
+    { label: "Consulta Veterinária", value: "consulta" },
+    { label: "Vacinação", value: "vacinacao" },
+  ];
+
   const handleSubmit = () => {
     if (!tutor || !pet || !especie || !tipoServico) {
       setWarningVisible(true);
@@ -63,11 +81,14 @@ export function BookingFormModal({
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={styles.modalContainer}>
-          <Image
-            source={require("@/assets/gatinho-anotando.jpeg")}
-            style={styles.image}
-          />
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            nestedScrollEnabled={true}
+          >
+            <Image
+              source={require("@/assets/gatinho-anotando.jpeg")}
+              style={styles.image}
+            />
             <Text style={styles.title}>Detalhes do Agendamento</Text>
             <Text style={styles.subtitle}>
               {selectedDate} às {selectedTime}
@@ -87,18 +108,48 @@ export function BookingFormModal({
               onChangeText={setPet}
             />
 
-            <TextInput
-              style={styles.input}
-              placeholder="Espécie (ex: gato, cachorro...)"
+            <Dropdown
+              style={styles.dropdown}
+              placeholderStyle={styles.placeholderStyle}
+              selectedTextStyle={styles.selectedTextStyle}
+              data={especies}
+              maxHeight={200}
+              labelField="label"
+              valueField="value"
+              placeholder="Selecione uma espécie"
               value={especie}
-              onChangeText={setEspecie}
+              onChange={(item) => setEspecie(item.value)}
+              containerStyle={styles.dropdownContainer}
+              itemContainerStyle={styles.itemContainer}
+              itemTextStyle={styles.itemTextStyle}
+              activeColor="#F5F5F5"
+              renderItem={(item) => (
+                <View style={styles.dropdownItem}>
+                  <Text style={styles.itemTextStyle}>{item.label}</Text>
+                </View>
+              )}
             />
 
-            <TextInput
-              style={styles.input}
-              placeholder="Tipo de serviço (ex: banho, consulta...)"
+            <Dropdown
+              style={styles.dropdown}
+              placeholderStyle={styles.placeholderStyle}
+              selectedTextStyle={styles.selectedTextStyle}
+              data={servicos}
+              maxHeight={200}
+              labelField="label"
+              valueField="value"
+              placeholder="Selecione um serviço"
               value={tipoServico}
-              onChangeText={setTipoServico}
+              onChange={(item) => setTipoServico(item.value)}
+              containerStyle={styles.dropdownContainer}
+              itemContainerStyle={styles.itemContainer}
+              itemTextStyle={styles.itemTextStyle}
+              activeColor="#F5F5F5"
+              renderItem={(item) => (
+                <View style={styles.dropdownItem}>
+                  <Text style={styles.itemTextStyle}>{item.label}</Text>
+                </View>
+              )}
             />
 
             <TextInput
@@ -146,6 +197,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     width: "90%",
+    maxHeight: "80%",
     elevation: 10,
   },
   image: {
@@ -173,6 +225,43 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 14,
+  },
+  dropdown: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: theme.colors.grey,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginBottom: 14,
+    backgroundColor: "#fff",
+  },
+  placeholderStyle: {
+    fontSize: 14,
+    color: "#999",
+  },
+  selectedTextStyle: {
+    fontSize: 14,
+    color: theme.colors.text,
+  },
+  dropdownContainer: {
+    borderRadius: 8,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  itemContainer: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+  },
+  itemTextStyle: {
+    fontSize: 14,
+    color: theme.colors.text,
   },
   textArea: {
     height: 80,

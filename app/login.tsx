@@ -1,6 +1,7 @@
 import { theme } from "@/components/theme/theme";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { Stack, useRouter } from "expo-router";
+import { useState } from "react";
 import {
   Image,
   StyleSheet,
@@ -11,73 +12,91 @@ import {
 } from "react-native";
 
 export default function LoginScreen() {
-  //   const { role } = useLocalSearchParams<{ role?: string }>();
   const router = useRouter();
 
-  const [role, setRole] = useState<"usuario" | "gestor">("usuario");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  useEffect(() => {
-    setRole("usuario");
-  }, []);
+  const handleLogin = async () => {
+    try {
+      console.log("Tentando login:", email);
 
-  const handleLogin = () => {
-    console.log("Tentando login para", role, email, password);
-    router.replace("/home");
-  };
-
-  const handleCadastro = () => {
-    console.log("Tentando cadastro para", role, email, password);
-    router.replace("/home");
+      router.replace("/agendamento-gestor");
+    } catch (error) {
+      alert("Erro ao fazer login. Verifique suas credenciais.");
+      console.error(error);
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <View>
-        <Image
-          source={require("@/assets/hello-dog.jpg")}
-          style={{ width: 200, height: 200, alignSelf: "center", marginBottom: -20, }}
-        />
-      </View>
-      <Text style={styles.title}>
-        {role === "gestor" ? "Login Gestor" : "Login"}
-      </Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="E-mail"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <View style={{ gap: 12 }}>
-        <TouchableOpacity style={styles.button} onPress={() => router.push("/agendamento")}>
-          <Text style={styles.buttonText}>Entrar</Text>
-        </TouchableOpacity>
-
-        {/* <TouchableOpacity
-          style={styles.register}
-          onPress={() => router.push("/cadastro")}
+    <>
+      <Stack.Screen options={{ title: "" }} />
+      <View style={styles.container}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
         >
-          <Text style={styles.buttonText}>Criar Conta</Text>
-        </TouchableOpacity> */}
+          <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
+        </TouchableOpacity>
+        <View>
+          <Image
+            source={require("@/assets/hello-dog.jpg")}
+            style={{
+              width: 200,
+              height: 200,
+              alignSelf: "center",
+              marginBottom: -20,
+            }}
+          />
+        </View>
+        <Text style={styles.title}>Bem-vindo(a) de volta!</Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="E-mail"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Senha"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+
+        <View style={{ gap: 12 }}>
+          <TouchableOpacity style={styles.button} onPress={handleLogin}>
+            <Text style={styles.buttonText}>Entrar</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.cadastroRow}>
+          <Text style={styles.cadastroText}>Ainda não tem uma conta?</Text>
+          <TouchableOpacity onPress={() => router.push("/cadastro")}>
+            <Text style={styles.cadastroLink}> Cadastre-se</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
+  backButton: {
+    position: "absolute",
+    top: 50,
+    left: 16,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
     justifyContent: "center",
@@ -105,17 +124,27 @@ const styles = StyleSheet.create({
     width: "85%",
     alignSelf: "center",
   },
-  register: {
-    backgroundColor: theme.colors.pink,
-    paddingVertical: 12,
-    borderRadius: 8,
-    width: "85%",
-    alignSelf: "center",
-  },
   buttonText: {
     color: theme.colors.background,
     fontSize: 16,
     textAlign: "center",
     fontWeight: "bold",
+  },
+  cadastroRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 16,
+  },
+  cadastroText: {
+    fontSize: 16,
+    fontWeight: "400",
+    color: theme.colors.text,
+  },
+  cadastroLink: {
+    fontSize: 16,
+    color: theme.colors.pink,
+    fontWeight: "700",
+    fontStyle: "italic",
   },
 });

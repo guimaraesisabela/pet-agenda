@@ -1,5 +1,6 @@
 import { theme } from "@/components/theme/theme";
-import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Image,
@@ -20,129 +21,191 @@ export default function CadastroScreen() {
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
 
-  // usuário
   const [nomePet, setNomePet] = useState("");
   const [especie, setEspecie] = useState("");
 
-  // gestor
   const [petshop, setPetshop] = useState("");
   const [unidade, setUnidade] = useState("");
 
-  //para visualização > só trocar o valor que estiver entre "" para "gestor" ou "usuario"
   useEffect(() => {
     setRole("usuario");
   }, []);
 
-  const handleCadastro = () => {
-    console.log("Novo cadastro:", {
-      role,
-      nome,
-      email,
-      senha,
-      confirmarSenha,
-      ...(role === "gestor" ? { petshop, unidade } : { nomePet, especie }),
-    });
-    router.replace("/home");
+  const handleCadastro = async () => {
+    if (senha !== confirmarSenha) {
+      alert("As senhas não coincidem!");
+      return;
+    }
+
+    try {
+      console.log("Cadastrando usuário:", {
+        role,
+        nome,
+        email,
+        userData:
+          role === "gestor" ? { petshop, unidade } : { nomePet, especie },
+      });
+
+      router.replace("/agendamento");
+    } catch (error) {
+      alert("Erro ao cadastrar. Tente novamente.");
+      console.error(error);
+    }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Image
-        source={require("@/assets/hello-cat.jpg")}
-        style={{
-          width: 180,
-          height: 180,
-          alignSelf: "center",
-          marginBottom: -15,
-        }}
-      />
-
-      <Text style={styles.title}>
-        {role === "gestor" ? "Cadastro Gestor" : "Cadastro"}
-      </Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Nome completo"
-        value={nome}
-        onChangeText={setNome}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="E-mail"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        value={senha}
-        onChangeText={setSenha}
-        secureTextEntry
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Confirmar senha"
-        value={confirmarSenha}
-        onChangeText={setConfirmarSenha}
-        secureTextEntry
-      />
-
-      {role === "gestor" ? (
-        <>
-          <TextInput
-            style={styles.input}
-            placeholder="Nome do Petshop"
-            value={petshop}
-            onChangeText={setPetshop}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Unidade"
-            value={unidade}
-            onChangeText={setUnidade}
-          />
-        </>
-      ) : (
-        <>
-          <TextInput
-            style={styles.input}
-            placeholder="Nome do pet"
-            value={nomePet}
-            onChangeText={setNomePet}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Espécie (gato, cachorro...)"
-            value={especie}
-            onChangeText={setEspecie}
-          />
-        </>
-      )}
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/agendamento")}
-      >
-        <Text style={styles.buttonText}>Cadastrar</Text>
-      </TouchableOpacity>
-
-      <View style={styles.loginRow}>
-        <Text style={styles.loginText}>Já tem uma conta?</Text>
-        <TouchableOpacity onPress={() => router.push("/login")}>
-          <Text style={styles.loginLink}> Fazer Login</Text>
+    <>
+      <Stack.Screen options={{ title: "" }} />
+      <ScrollView contentContainerStyle={styles.container}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
-      </View>
-    </ScrollView>
+        <Image
+          source={
+            role === "gestor"
+              ? require("@/assets/macaquinho.png")
+              : require("@/assets/hello-cat.jpg")
+          }
+          style={[styles.image, role === "gestor" && styles.imageGestor]}
+        />
+
+        <Text style={styles.title}>Crie sua Conta</Text>
+        <Text style={styles.subtitle}>
+          Para começar, selecione seu tipo de perfil:
+        </Text>
+
+        <View style={styles.roleSelector}>
+          <TouchableOpacity
+            style={[
+              styles.roleButton,
+              role === "usuario" && styles.roleButtonActiveUsuario,
+              role !== "usuario" && styles.roleButtonInactive,
+            ]}
+            onPress={() => setRole("usuario")}
+          >
+            <Text
+              style={[
+                styles.roleButtonText,
+                role === "usuario" && styles.roleButtonTextActive,
+              ]}
+            >
+              Sou Tutor
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.roleButton,
+              role === "gestor" && styles.roleButtonActiveGestor,
+              role !== "gestor" && styles.roleButtonInactive,
+            ]}
+            onPress={() => setRole("gestor")}
+          >
+            <Text
+              style={[
+                styles.roleButtonText,
+                role === "gestor" && styles.roleButtonTextActive,
+              ]}
+            >
+              Sou Gestor
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Nome completo"
+          value={nome}
+          onChangeText={setNome}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="E-mail"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Senha"
+          value={senha}
+          onChangeText={setSenha}
+          secureTextEntry
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Confirmar senha"
+          value={confirmarSenha}
+          onChangeText={setConfirmarSenha}
+          secureTextEntry
+        />
+
+        {role === "gestor" ? (
+          <>
+            <TextInput
+              style={styles.input}
+              placeholder="Nome do Petshop"
+              value={petshop}
+              onChangeText={setPetshop}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Unidade"
+              value={unidade}
+              onChangeText={setUnidade}
+            />
+          </>
+        ) : (
+          <>
+            <TextInput
+              style={styles.input}
+              placeholder="Nome do pet"
+              value={nomePet}
+              onChangeText={setNomePet}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Espécie (gato, cachorro...)"
+              value={especie}
+              onChangeText={setEspecie}
+            />
+          </>
+        )}
+
+        <TouchableOpacity style={styles.button} onPress={handleCadastro}>
+          <Text style={styles.buttonText}>Cadastrar</Text>
+        </TouchableOpacity>
+
+        <View style={styles.loginRow}>
+          <Text style={styles.loginText}>Já tem uma conta?</Text>
+          <TouchableOpacity onPress={() => router.push("/login")}>
+            <Text style={styles.loginLink}> Fazer Login</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
+  backButton: {
+    position: "absolute",
+    top: 50,
+    left: 16,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flexGrow: 1,
     justifyContent: "center",
@@ -152,9 +215,48 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
+    // marginBottom: 24,
+    textAlign: "center",
+    color: theme.colors.text,
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: "400",
     marginBottom: 24,
     textAlign: "center",
     color: theme.colors.text,
+  },
+  roleSelector: {
+    flexDirection: "row",
+    marginBottom: 24,
+    gap: 12,
+  },
+  roleButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  roleButtonInactive: {
+    backgroundColor: "rgba(255, 192, 203, 0.3)",
+  },
+  roleButtonActiveUsuario: {
+    borderColor: theme.colors.pink,
+    backgroundColor: theme.colors.pink,
+  },
+  roleButtonActiveGestor: {
+    borderColor: theme.colors.pink,
+    backgroundColor: theme.colors.pink,
+  },
+  roleButtonText: {
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "600",
+    color: theme.colors.text,
+  },
+  roleButtonTextActive: {
+    color: theme.colors.background,
   },
   input: {
     width: "100%",
@@ -178,12 +280,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "600",
   },
-  loginButton: {
-    textAlign: "center",
-    color: theme.colors.text,
-    fontStyle: "italic",
-    fontWeight: "500",
-  },
   loginRow: {
     flexDirection: "row",
     justifyContent: "center",
@@ -200,5 +296,16 @@ const styles = StyleSheet.create({
     color: theme.colors.pink,
     fontWeight: "700",
     fontStyle: "italic",
+  },
+  image: {
+    width: 180,
+    height: 180,
+    alignSelf: "center",
+    marginBottom: -40,
+  },
+  imageGestor: {
+    width: 140,
+    height: 130,
+    marginBottom: 2,
   },
 });

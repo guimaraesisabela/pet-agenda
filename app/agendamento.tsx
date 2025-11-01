@@ -3,9 +3,12 @@ import { BookingFormModal } from "@/components/calendar/booking-formal";
 import { CalendarPicker } from "@/components/calendar/calendar-picker";
 import { ConfirmationModal } from "@/components/calendar/confirmacao-modal";
 import { theme } from "@/components/theme/theme";
+import { Ionicons } from "@expo/vector-icons";
+import { router, Stack } from "expo-router";
 import { useState } from "react";
 import {
-  FlatList,
+  Image,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -20,8 +23,17 @@ export default function AgendamentoScreen() {
   const [warningVisible, setWarningVisible] = useState(false);
 
   const horariosPorDia: Record<string, string[]> = {
-    "2025-10-07": ["09:00", "10:30", "13:00", "15:00"],
-    "2025-10-08": ["08:30", "11:00", "14:00", "16:30"],
+    "2025-10-07": [
+      "09:00",
+      "09:30",
+      "10:00",
+      "10:30",
+      "11:00",
+      "14:00",
+      "14:30",
+      "15:00",
+    ],
+    "2025-10-08": ["08:30", "09:00", "11:00", "14:00", "16:30"],
   };
 
   const horarios = horariosPorDia[selectedDate] || [];
@@ -45,112 +57,203 @@ export default function AgendamentoScreen() {
     setConfirmationVisible(true);
   };
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleDateString("pt-BR", { month: "long" });
+    return `${day} de ${month.charAt(0).toUpperCase() + month.slice(1)}`;
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Agende um horário para seu pet:</Text>
+    <>
+      <Stack.Screen options={{ title: "Novo Agendamento" }} />
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
+      </TouchableOpacity>
+      <ScrollView style={styles.container}>
+        <View style={styles.imageContainer}>
+          <Image
+            source={require("@/assets/agendamentos.png")}
+            style={styles.headerImage}
+          />
+        </View>
+        <TouchableOpacity
+          style={styles.meusAgendamentosButton}
+          onPress={() => router.push("/agendamento-usuario")}
+        >
+          <Ionicons name="calendar" size={20} color={theme.colors.primary} />
+          <Text style={styles.meusAgendamentosText}>Meus Agendamentos</Text>
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={theme.colors.primary}
+          />
+        </TouchableOpacity>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Selecione uma data</Text>
+          <View style={styles.card}>
+            <CalendarPicker onDateSelect={setSelectedDate} />
+          </View>
+        </View>
 
-      <CalendarPicker onDateSelect={setSelectedDate} />
-
-      {selectedDate ? (
-        horarios.length > 0 ? (
-          <>
-            <Text style={styles.subtitle}>Horários disponíveis:</Text>
-            <FlatList
-              data={horarios}
-              keyExtractor={(item) => item}
-              numColumns={3}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.timeButton,
-                    item === selectedTime && styles.timeButtonSelected,
-                  ]}
-                  onPress={() => handleHorarioPress(item)}
-                >
-                  <Text
-                    style={[
-                      styles.timeText,
-                      item === selectedTime && styles.timeTextSelected,
-                    ]}
-                  >
-                    {item}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
-          </>
-        ) : (
-            <Text style={styles.noSlotsText}>
-              Não temos horários disponíveis para essa data 😿
+        {selectedDate && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              Horários disponíveis para {formatDate(selectedDate)}
             </Text>
-        )
-      ) : (
-        <Text style={styles.infoText}>
-          Selecione uma data para ver os horários disponíveis.
-        </Text>
-      )}
+            <View style={styles.card}>
+              {horarios.length > 0 ? (
+                <View style={styles.horariosContainer}>
+                  {horarios.map((item) => (
+                    <TouchableOpacity
+                      key={item}
+                      style={[
+                        styles.timeButton,
+                        item === selectedTime && styles.timeButtonSelected,
+                      ]}
+                      onPress={() => handleHorarioPress(item)}
+                    >
+                      <Text
+                        style={[
+                          styles.timeText,
+                          item === selectedTime && styles.timeTextSelected,
+                        ]}
+                      >
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.noSlotsText}>
+                  Não há horários disponíveis para esta data 😿
+                </Text>
+              )}
+            </View>
+          </View>
+        )}
 
-      <WarningModal
-        visible={warningVisible}
-        onClose={() => setWarningVisible(false)}
-      />
+        <WarningModal
+          visible={warningVisible}
+          onClose={() => setWarningVisible(false)}
+        />
 
-      <BookingFormModal
-        visible={formModalVisible}
-        onClose={() => setFormModalVisible(false)}
-        onConfirm={handleConfirmForm}
-        selectedDate={selectedDate}
-        selectedTime={selectedTime}
-      />
+        <BookingFormModal
+          visible={formModalVisible}
+          onClose={() => setFormModalVisible(false)}
+          onConfirm={handleConfirmForm}
+          selectedDate={selectedDate}
+          selectedTime={selectedTime}
+        />
 
-      <ConfirmationModal
-        visible={confirmationVisible}
-        onClose={() => setConfirmationVisible(false)}
-        date={selectedDate}
-        time={selectedTime}
-      />
-    </View>
+        <ConfirmationModal
+          visible={confirmationVisible}
+          onClose={() => setConfirmationVisible(false)}
+          date={selectedDate}
+          time={selectedTime}
+        />
+      </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 16, paddingTop: 40 },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: theme.colors.text,
-    marginBottom: 12,
-    textAlign: "center",
+  backButton: {
+    position: "absolute",
+    top: 50,
+    left: 16,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  subtitle: {
+  imageContainer: {
+    alignItems: "center",
+    marginTop: 20,
+  },
+  headerImage: {
+    width: 180,
+    height: 180,
+    resizeMode: "contain",
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  meusAgendamentosButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 20,
+    gap: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  meusAgendamentosText: {
     fontSize: 16,
     fontWeight: "600",
-    color: theme.colors.text,
-    marginVertical: 10,
+    color: theme.colors.primary,
   },
-  noSlotsText: {
-    textAlign: "center",
-    color: theme.colors.text,
-    fontSize: 16,
-    marginTop: 20,
+  section: {
+    marginBottom: 24,
   },
-  infoText: {
-    textAlign: "center",
-    marginTop: 20,
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "700",
     color: theme.colors.text,
+    marginBottom: 12,
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  horariosContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
   },
   timeButton: {
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: theme.colors.grey,
-    margin: 6,
+    backgroundColor: "#fff",
+    minWidth: 75,
+    alignItems: "center",
   },
   timeButtonSelected: {
     backgroundColor: theme.colors.primary,
     borderColor: theme.colors.primary,
   },
-  timeText: { color: theme.colors.text },
-  timeTextSelected: { color: theme.colors.background },
+  timeText: {
+    color: theme.colors.text,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  timeTextSelected: {
+    color: "#fff",
+    fontWeight: "700",
+  },
+  noSlotsText: {
+    textAlign: "center",
+    color: theme.colors.text,
+    fontSize: 14,
+    paddingVertical: 20,
+  },
 });

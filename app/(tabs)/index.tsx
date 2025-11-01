@@ -9,8 +9,8 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View>
         <Image
-          source={require("@/assets/logo-pet.png")}
-          style={{ width: 180, height: 145, alignSelf: "center" }}
+          source={require("@/assets/animais-felizes.png")}
+          style={{ width: 300, height: 200, alignSelf: "center" }}
         />
       </View>
       <Text style={styles.title}>Bem-vindo ao Agenda Pet!</Text>
@@ -25,7 +25,14 @@ export default function HomeScreen() {
           style={styles.buttons}
           onPress={() => router.push("/cadastro")}
         >
-          <Text style={{ color: theme.colors.background }}>Crie sua conta</Text>
+          <Text style={{ color: theme.colors.background, fontWeight: "600", fontSize: 16 }}>Crie sua conta</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={() => router.push("/login")}
+        >
+          <Text style={{ color: theme.colors.background, fontWeight: "600", fontSize: 16 }}>Login</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -61,5 +68,17 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     alignItems: "center",
     width: "85%",
+    marginBottom: 12,
+  },
+  loginButton: {
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "transparent",
+    backgroundColor: theme.colors.pink,
+    paddingVertical: 10,
+    alignSelf: "center",
+    alignItems: "center",
+    width: "85%",
+    marginBottom: 12,
   },
 });
