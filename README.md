@@ -46,7 +46,9 @@ O aplicativo oferece **duas experiências distintas**:
 - **React Native Elements** — Componentes de UI  
 - **Ionicons** — Biblioteca de ícones  
 - **React Native Element Dropdown** — Componentes dropdown customizados  
-- **React Native Picker** — Selecionadores nativos  
+- **React Native Picker** — Selecionadores nativos
+- **Stitch AI** — Geração e edição inteligente de conteúdo para interface  
+- **Gemini AI** — Geração e aprimoramento de imagens (pré-visualizações, ícones e recursos visuais)
 
 ### ☁️ **Backend (Preparado para Integração)**
 - **Firebase Authentication** — Autenticação de usuários  
