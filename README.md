@@ -1,50 +1,68 @@
-# Welcome to your Expo app 👋
+# 🐾 **Agenda Pet**
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Um aplicativo mobile completo para **agendamento e gerenciamento de serviços para pets**, conectando **tutores e petshops** de forma prática e eficiente.
 
-## Get started
+---
 
-1. Install dependencies
+## 📱 **Sobre o Projeto**
 
-   ```bash
-   npm install
-   ```
+O **Agenda Pet** é uma solução digital que facilita o agendamento de serviços pet  
+(**banho, tosa, consultas veterinárias, vacinação**, etc.) através de uma **plataforma intuitiva e moderna**.  
 
-2. Start the app
+O aplicativo oferece **duas experiências distintas**:  
+- 🐶 **Tutores de pets**  
+- 🏪 **Gestores de petshops**
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## 🎯 **Funcionalidades Principais**
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 👤 **Para Tutores**
+- ✅ **Cadastro de usuário e pets**
+- 📅 **Agendamento de serviços com calendário interativo**
+- 👀 **Visualização de agendamentos futuros e histórico**
+- ✏️ **Cancelamento de agendamentos**
+- 🐕 **Gerenciamento de múltiplos pets**
+- 🔔 **Detalhes completos de cada agendamento**
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 🏪 **Para Gestores de Petshop**
+- 📊 **Visualização semanal de agendamentos**
+- 📋 **Informações detalhadas de pets e tutores**
+- 🗓️ **Organização por datas e horários**
+- 👥 **Gestão de múltiplos agendamentos simultâneos**
+- 📞 **Acesso rápido às informações de contato dos tutores**
 
-## Get a fresh project
+---
 
-When you're ready, run:
+## 🛠️ **Tecnologias Utilizadas**
 
-```bash
-npm run reset-project
-```
+### ⚙️ **Core**
+- **React Native** — Framework para desenvolvimento mobile multiplataforma  
+- **Expo** — Plataforma para desenvolvimento e build  
+- **TypeScript** — Superset do JavaScript com tipagem estática  
+- **Expo Router** — Sistema de navegação baseado em file-system  
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 🎨 **UI / UX**
+- **React Native Elements** — Componentes de UI  
+- **Ionicons** — Biblioteca de ícones  
+- **React Native Element Dropdown** — Componentes dropdown customizados  
+- **React Native Picker** — Selecionadores nativos  
 
-## Learn more
+### ☁️ **Backend (Preparado para Integração)**
+- **Firebase Authentication** — Autenticação de usuários  
+- **Cloud Firestore** — Banco de dados NoSQL em tempo real  
+- **Firebase Storage** — Armazenamento de arquivos  
 
-To learn more about developing your project with Expo, look at the following resources:
+### 🧩 **Gerenciamento de Estado**
+- **React Hooks** (`useState`, `useEffect`) — Gerenciamento de estado local  
+- **Context API** — Preparado para estado global (`AuthContext`)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+---
 
-## Join the community
+## 👥 **Equipe**
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Projeto desenvolvido como trabalho acadêmico por:  
+- **Gabriel Fonseca**  
+- **Thiago Sales**  
+- **Thales Almeida**  
+- **Isabela Oliveira**
