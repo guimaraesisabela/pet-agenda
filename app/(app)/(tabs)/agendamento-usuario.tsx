@@ -23,6 +23,7 @@ interface Agendamento {
 }
 
 export default function MeusAgendamentosScreen() {
+  console.log('MeusAgendamentosScreen rendered');
   const [activeTab, setActiveTab] = useState<"proximos" | "historico">(
     "proximos"
   );

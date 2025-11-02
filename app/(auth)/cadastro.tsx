@@ -11,8 +11,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../services/firebase";
 
 export default function CadastroScreen() {
+  console.log('CadastroScreen rendered');
   const [role, setRole] = useState<"usuario" | "gestor">("usuario");
   const router = useRouter();
 
@@ -32,21 +35,16 @@ export default function CadastroScreen() {
   }, []);
 
   const handleCadastro = async () => {
+    console.log('handleCadastro called');
     if (senha !== confirmarSenha) {
       alert("As senhas não coincidem!");
       return;
     }
 
     try {
-      console.log("Cadastrando usuário:", {
-        role,
-        nome,
-        email,
-        userData:
-          role === "gestor" ? { petshop, unidade } : { nomePet, especie },
-      });
-
-      router.replace("/agendamento");
+      await createUserWithEmailAndPassword(auth, email, senha);
+      // TODO: Save user data (role, name, etc.) to Firestore
+      router.replace("/(auth)/login");
     } catch (error) {
       alert("Erro ao cadastrar. Tente novamente.");
       console.error(error);
@@ -185,7 +183,7 @@ export default function CadastroScreen() {
 
         <View style={styles.loginRow}>
           <Text style={styles.loginText}>Já tem uma conta?</Text>
-          <TouchableOpacity onPress={() => router.push("/login")}>
+          <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
             <Text style={styles.loginLink}> Fazer Login</Text>
           </TouchableOpacity>
         </View>

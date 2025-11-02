@@ -1,10 +1,34 @@
 import { theme } from "@/components/theme/theme";
+import { useAuth } from "@/contexts/auth";
 import { useRouter } from "expo-router";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  console.log('HomeScreen rendered, user:', user);
 
+  if (user) {
+    console.log('HomeScreen: user is authenticated');
+    return (
+      <View style={styles.container}>
+        <View>
+          <Image
+            source={require("@/assets/animais-felizes.png")}
+            style={{ width: 300, height: 200, alignSelf: "center" }}
+          />
+        </View>
+        <Text style={styles.title}>Bem-vindo ao Agenda Pet!</Text>
+        <Text style={styles.description}>
+          Agende banhos, tosas e outros cuidados para o seu pet de forma simples e
+          rápida. Aqui, seu melhor amigo está em boas mãos: seguro, bem cuidado e
+          cheio de carinho!
+        </Text>
+      </View>
+    );
+  }
+
+  console.log('HomeScreen: no user');
   return (
     <View style={styles.container}>
       <View>
@@ -23,14 +47,14 @@ export default function HomeScreen() {
       <View>
         <TouchableOpacity
           style={styles.buttons}
-          onPress={() => router.push("/cadastro")}
+          onPress={() => router.push("/(auth)/cadastro")}
         >
           <Text style={{ color: theme.colors.background, fontWeight: "600", fontSize: 16 }}>Crie sua conta</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={() => router.push("/login")}
+          onPress={() => router.push("/(auth)/login")}
         >
           <Text style={{ color: theme.colors.background, fontWeight: "600", fontSize: 16 }}>Login</Text>
         </TouchableOpacity>

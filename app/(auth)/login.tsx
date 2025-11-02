@@ -10,18 +10,21 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../services/firebase";
 
 export default function LoginScreen() {
+  console.log('LoginScreen rendered');
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
+    console.log('handleLogin called');
     try {
-      console.log("Tentando login:", email);
-
-      router.replace("/agendamento-gestor");
+      await signInWithEmailAndPassword(auth, email, password);
+      router.replace("/(app)");
     } catch (error) {
       alert("Erro ao fazer login. Verifique suas credenciais.");
       console.error(error);
@@ -76,7 +79,7 @@ export default function LoginScreen() {
 
         <View style={styles.cadastroRow}>
           <Text style={styles.cadastroText}>Ainda não tem uma conta?</Text>
-          <TouchableOpacity onPress={() => router.push("/cadastro")}>
+          <TouchableOpacity onPress={() => router.push("/(auth)/cadastro")}>
             <Text style={styles.cadastroLink}> Cadastre-se</Text>
           </TouchableOpacity>
         </View>
