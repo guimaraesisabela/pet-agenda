@@ -1,9 +1,9 @@
-import { Redirect, Stack } from 'expo-router';
-import { useAuth } from '@/contexts/auth';
-import { TouchableOpacity, Text } from 'react-native';
-import { auth } from '@/services/firebase';
 import { Colors } from '@/constants/theme';
+import { useAuth } from '@/contexts/auth';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { auth } from '@/services/firebase';
+import { Redirect, Stack } from 'expo-router';
+import { Text, TouchableOpacity } from 'react-native';
 
 export default function AppLayout() {
   const { user, loading } = useAuth();
@@ -29,7 +29,7 @@ export default function AppLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: true,
+        headerShown: false,
         headerRight: () => (
           <TouchableOpacity onPress={handleLogout} style={{ marginRight: 16 }}>
             <Text style={{ color: Colors[colorScheme ?? 'light'].tint }}>Logout</Text>

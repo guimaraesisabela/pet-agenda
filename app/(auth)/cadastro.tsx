@@ -1,9 +1,12 @@
 import { theme } from "@/components/theme/theme";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter } from "expo-router";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useEffect, useState } from "react";
 import {
   Image,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,11 +14,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../services/firebase";
 
 export default function CadastroScreen() {
-  console.log('CadastroScreen rendered');
+  console.log("CadastroScreen rendered");
   const [role, setRole] = useState<"usuario" | "gestor">("usuario");
   const router = useRouter();
 
@@ -30,23 +32,39 @@ export default function CadastroScreen() {
   const [petshop, setPetshop] = useState("");
   const [unidade, setUnidade] = useState("");
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState<"error" | "warning">("error");
+
   useEffect(() => {
     setRole("usuario");
   }, []);
 
   const handleCadastro = async () => {
-    console.log('handleCadastro called');
+    console.log("handleCadastro called");
     if (senha !== confirmarSenha) {
-      alert("As senhas não coincidem!");
+      setModalMessage("As senhas não coincidem!");
+      setModalType("warning");
+      setModalVisible(true);
       return;
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email, senha);
-      // TODO: Save user data (role, name, etc.) to Firestore
-      router.replace("/(auth)/login");
+      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+      
+      // Salva o role no AsyncStorage
+      await AsyncStorage.setItem(`@user_role_${userCredential.user.uid}`, role);
+
+      // Redireciona baseado no role
+      if (role === "gestor") {
+        router.replace("/(app)/agendamento-gestor");
+      } else {
+        router.replace("/(app)/agendamento");
+      }
     } catch (error) {
-      alert("Erro ao cadastrar. Tente novamente.");
+      setModalMessage("Erro ao cadastrar. Tente novamente.");
+      setModalType("error");
+      setModalVisible(true);
       console.error(error);
     }
   };
@@ -187,6 +205,45 @@ export default function CadastroScreen() {
             <Text style={styles.loginLink}> Fazer Login</Text>
           </TouchableOpacity>
         </View>
+
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View
+              style={[
+                styles.modalContainer,
+                modalType === "warning" && styles.modalContainerWarning,
+              ]}
+            >
+              <View
+                style={[
+                  styles.iconContainer,
+                  modalType === "warning" && styles.iconContainerWarning,
+                ]}
+              >
+                <Text style={styles.iconText}>
+                  {modalType === "warning" ? "⚠️" : "❌"}
+                </Text>
+              </View>
+
+              <Text style={styles.modalTitle}>
+                {modalType === "warning" ? "Atenção!" : "Erro!"}
+              </Text>
+              <Text style={styles.modalMessage}>{modalMessage}</Text>
+
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     </>
   );
@@ -213,7 +270,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    // marginBottom: 24,
     textAlign: "center",
     color: theme.colors.text,
   },
@@ -305,5 +361,72 @@ const styles = StyleSheet.create({
     width: 140,
     height: 130,
     marginBottom: 2,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 28,
+    width: "100%",
+    maxWidth: 340,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  modalContainerWarning: {
+    backgroundColor: "#FFF4E6", 
+  },
+  iconContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "#FFE8E8",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 18,
+  },
+  iconContainerWarning: {
+    backgroundColor: "#FFF4E6",
+  },
+  iconText: {
+    fontSize: 32,
+  },
+  modalTitle: {
+    fontSize: 23,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "black",
+  },
+  modalMessage: {
+    fontSize: 16,
+    textAlign: "center",
+    color: "black",
+    marginBottom: 20,
+    lineHeight: 23,
+  },
+  modalButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 13,
+    paddingHorizontal: 40,
+    borderRadius: 10,
+    width: "100%",
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });

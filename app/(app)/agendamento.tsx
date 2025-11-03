@@ -3,6 +3,7 @@ import { BookingFormModal } from "@/components/calendar/booking-formal";
 import { CalendarPicker } from "@/components/calendar/calendar-picker";
 import { ConfirmationModal } from "@/components/calendar/confirmacao-modal";
 import { theme } from "@/components/theme/theme";
+import { auth } from "@/services/firebase";
 import { Ionicons } from "@expo/vector-icons";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
@@ -65,9 +66,20 @@ export default function AgendamentoScreen() {
     return `${day} de ${month.charAt(0).toUpperCase() + month.slice(1)}`;
   };
 
+  const handleLogout = () => {
+    auth.signOut();
+  };
+
   return (
     <>
       <Stack.Screen options={{ title: "Novo Agendamento" }} />
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Ionicons name="log-out-outline" size={22} color="#fff" />
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
+      </TouchableOpacity>
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
       </TouchableOpacity>
@@ -182,6 +194,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: '#F8F9FA'
+  },
+  logoutButton: {
+    position: "absolute",
+    top: 50,
+    right: 16,
+    zIndex: 10,
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    backgroundColor: theme.colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   meusAgendamentosButton: {
     flexDirection: "row",

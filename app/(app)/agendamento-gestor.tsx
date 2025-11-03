@@ -1,4 +1,5 @@
 import { theme } from "@/components/theme/theme";
+import { auth } from "@/services/firebase";
 import { Ionicons } from "@expo/vector-icons";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
@@ -93,9 +94,16 @@ export default function AgendamentoGestorScreen() {
 
   const allHorarios = ["09:00", "10:00", "11:00", "12:00"];
 
+  const handleLogout = () => {
+    auth.signOut();
+  };
+
   return (
     <>
       <Stack.Screen options={{ title: "" }} />
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Ionicons name="log-out-outline" size={22} color="#fff" />
+      </TouchableOpacity>
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
       </TouchableOpacity>
@@ -202,6 +210,23 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
+  },
+  logoutButton: {
+    position: "absolute",
+    top: 50,
+    right: 16,
+    zIndex: 10,
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    backgroundColor: theme.colors.pink,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   container: {
     flex: 1,

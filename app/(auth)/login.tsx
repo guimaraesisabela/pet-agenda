@@ -1,32 +1,43 @@
 import { theme } from "@/components/theme/theme";
-import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter } from "expo-router";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
 import {
   Image,
+  Modal,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../services/firebase";
 
 export default function LoginScreen() {
-  console.log('LoginScreen rendered');
+  console.log("LoginScreen rendered");
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [modalVisible, setModalVisible] = useState(false);
 
   const handleLogin = async () => {
-    console.log('handleLogin called');
+    console.log("handleLogin called");
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.replace("/(app)");
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Busca o role do AsyncStorage
+      const role = await AsyncStorage.getItem(`@user_role_${userCredential.user.uid}`);
+
+      // Redireciona baseado no role
+      if (role === "gestor") {
+        router.replace("/(app)/agendamento-gestor");
+      } else {
+        router.replace("/(app)/agendamento");
+      }
     } catch (error) {
-      alert("Erro ao fazer login. Verifique suas credenciais.");
+      setModalVisible(true);
       console.error(error);
     }
   };
@@ -35,12 +46,6 @@ export default function LoginScreen() {
     <>
       <Stack.Screen options={{ title: "" }} />
       <View style={styles.container}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
         <View>
           <Image
             source={require("@/assets/hello-dog.jpg")}
@@ -83,23 +88,39 @@ export default function LoginScreen() {
             <Text style={styles.cadastroLink}> Cadastre-se</Text>
           </TouchableOpacity>
         </View>
+
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <View style={styles.iconContainer}>
+                <Text style={styles.iconText}>⚠️</Text>
+              </View>
+
+              <Text style={styles.modalTitle}>Ops!</Text>
+              <Text style={styles.modalMessage}>
+                Erro ao fazer login. Verifique suas credenciais.
+              </Text>
+
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Entendi</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  backButton: {
-    position: "absolute",
-    top: 50,
-    left: 16,
-    zIndex: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   container: {
     flex: 1,
     justifyContent: "center",
@@ -149,5 +170,66 @@ const styles = StyleSheet.create({
     color: theme.colors.pink,
     fontWeight: "700",
     fontStyle: "italic",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContainer: {
+    backgroundColor: "#FFF3CD",
+    borderRadius: 16,
+    padding: 20,
+    width: "100%",
+    maxWidth: 300,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  iconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#FFF3CD",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 0,
+  },
+  iconText: {
+    fontSize: 32,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 5,
+    color: "black",
+  },
+  modalMessage: {
+    fontSize: 16,
+    textAlign: "center",
+    color: "black",
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  modalButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    width: "100%",
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });
