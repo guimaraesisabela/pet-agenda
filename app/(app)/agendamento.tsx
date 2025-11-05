@@ -1,12 +1,8 @@
-import { WarningModal } from "@/components/calendar/atencao-modal";
-import { BookingFormModal } from "@/components/calendar/booking-formal";
-import { CalendarPicker } from "@/components/calendar/calendar-picker";
-import { ConfirmationModal } from "@/components/calendar/confirmacao-modal";
 import { theme } from "@/components/theme/theme";
+import { useAuth } from "@/contexts/AuthContext";
 import { auth } from "@/services/firebase";
 import { Ionicons } from "@expo/vector-icons";
 import { router, Stack } from "expo-router";
-import { useState } from "react";
 import {
   Image,
   ScrollView,
@@ -17,184 +13,125 @@ import {
 } from "react-native";
 
 export default function AgendamentoScreen() {
-  const [selectedDate, setSelectedDate] = useState<string>("");
-  const [selectedTime, setSelectedTime] = useState<string>("");
-  const [formModalVisible, setFormModalVisible] = useState(false);
-  const [confirmationVisible, setConfirmationVisible] = useState(false);
-  const [warningVisible, setWarningVisible] = useState(false);
-
-  const horariosPorDia: Record<string, string[]> = {
-    "2025-10-07": [
-      "09:00",
-      "09:30",
-      "10:00",
-      "10:30",
-      "11:00",
-      "14:00",
-      "14:30",
-      "15:00",
-    ],
-    "2025-10-08": ["08:30", "09:00", "11:00", "14:00", "16:30"],
-  };
-
-  const horarios = horariosPorDia[selectedDate] || [];
-
-  const handleHorarioPress = (hora: string) => {
-    if (!selectedDate) {
-      setWarningVisible(true);
-      return;
-    }
-    setSelectedTime(hora);
-    setFormModalVisible(true);
-  };
-
-  const handleConfirmForm = (formData: any) => {
-    console.log("Dados enviados:", {
-      ...formData,
-      date: selectedDate,
-      time: selectedTime,
-    });
-    setFormModalVisible(false);
-    setConfirmationVisible(true);
-  };
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    const day = date.getDate();
-    const month = date.toLocaleDateString("pt-BR", { month: "long" });
-    return `${day} de ${month.charAt(0).toUpperCase() + month.slice(1)}`;
-  };
+  console.log('🏠 [Agendamento] Tela home do tutor renderizada');
+  
+  const { userData } = useAuth();
+  
+  console.log('🏠 [Agendamento] Dados do usuário:', {
+    displayName: userData?.displayName,
+    role: userData?.role
+  });
 
   const handleLogout = () => {
-    auth.signOut();
+    console.log('🏠 [Agendamento] Logout iniciado');
+    auth.signOut()
+      .then(() => console.log('✅ [Agendamento] Logout bem-sucedido'))
+      .catch((error) => console.error('❌ [Agendamento] Erro no logout:', error));
   };
 
   return (
     <>
-      <Stack.Screen options={{ title: "Novo Agendamento" }} />
+      <Stack.Screen options={{ title: "" }} />
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Ionicons name="log-out-outline" size={22} color="#fff" />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
-      </TouchableOpacity>
       <ScrollView style={styles.container}>
-        <View style={styles.imageContainer}>
+        <View style={styles.header}>
           <Image
             source={require("@/assets/agendamentos.png")}
             style={styles.headerImage}
           />
-        </View>
-        <TouchableOpacity
-          style={styles.meusAgendamentosButton}
-          onPress={() => router.push("/agendamento-usuario")}
-        >
-          <Ionicons name="calendar" size={20} color={theme.colors.primary} />
-          <Text style={styles.meusAgendamentosText}>Meus Agendamentos</Text>
-          <Ionicons
-            name="chevron-forward"
-            size={20}
-            color={theme.colors.primary}
-          />
-        </TouchableOpacity>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Selecione uma data</Text>
-          <View style={styles.card}>
-            <CalendarPicker onDateSelect={setSelectedDate} />
-          </View>
+          <Text style={styles.welcomeText}>
+            Olá, {userData?.displayName || 'Tutor'}! 👋
+          </Text>
+          <Text style={styles.subtitle}>
+            O que você gostaria de fazer hoje?
+          </Text>
         </View>
 
-        {selectedDate && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              Horários disponíveis para {formatDate(selectedDate)}
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity
+            style={[styles.actionCard, styles.primaryCard]}
+            onPress={() => {
+              console.log('🏠 [Agendamento] Navegando para tela de novo agendamento');
+              router.push("/schedule");
+            }}
+          >
+            <View style={styles.actionIconContainer}>
+              <Ionicons name="add-circle" size={48} color="#fff" />
+            </View>
+            <Text style={styles.actionTitle}>Novo Agendamento</Text>
+            <Text style={styles.actionDescription}>
+              Agende um serviço para seu pet
             </Text>
-            <View style={styles.card}>
-              {horarios.length > 0 ? (
-                <View style={styles.horariosContainer}>
-                  {horarios.map((item) => (
-                    <TouchableOpacity
-                      key={item}
-                      style={[
-                        styles.timeButton,
-                        item === selectedTime && styles.timeButtonSelected,
-                      ]}
-                      onPress={() => handleHorarioPress(item)}
-                    >
-                      <Text
-                        style={[
-                          styles.timeText,
-                          item === selectedTime && styles.timeTextSelected,
-                        ]}
-                      >
-                        {item}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              ) : (
-                <Text style={styles.noSlotsText}>
-                  Não há horários disponíveis para esta data 😿
-                </Text>
-              )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => {
+              console.log('🏠 [Agendamento] Navegando para meus agendamentos');
+              router.push("/my-appointments");
+            }}
+          >
+            <View style={[styles.actionIconContainer, styles.secondaryIcon]}>
+              <Ionicons name="calendar" size={48} color={theme.colors.primary} />
+            </View>
+            <Text style={styles.actionTitle}>Meus Agendamentos</Text>
+            <Text style={styles.actionDescription}>
+              Veja seus agendamentos e histórico
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.infoSection}>
+          <Text style={styles.infoTitle}>Como funciona?</Text>
+          
+          <View style={styles.stepContainer}>
+            <View style={styles.stepNumber}>
+              <Text style={styles.stepNumberText}>1</Text>
+            </View>
+            <View style={styles.stepContent}>
+              <Text style={styles.stepTitle}>Solicite um horário</Text>
+              <Text style={styles.stepDescription}>
+                Escolha o serviço, data e horário desejados
+              </Text>
             </View>
           </View>
-        )}
 
-        <WarningModal
-          visible={warningVisible}
-          onClose={() => setWarningVisible(false)}
-        />
+          <View style={styles.stepContainer}>
+            <View style={styles.stepNumber}>
+              <Text style={styles.stepNumberText}>2</Text>
+            </View>
+            <View style={styles.stepContent}>
+              <Text style={styles.stepTitle}>Aguarde aprovação</Text>
+              <Text style={styles.stepDescription}>
+                O gestor irá confirmar ou sugerir outro horário
+              </Text>
+            </View>
+          </View>
 
-        <BookingFormModal
-          visible={formModalVisible}
-          onClose={() => setFormModalVisible(false)}
-          onConfirm={handleConfirmForm}
-          selectedDate={selectedDate}
-          selectedTime={selectedTime}
-        />
-
-        <ConfirmationModal
-          visible={confirmationVisible}
-          onClose={() => setConfirmationVisible(false)}
-          date={selectedDate}
-          time={selectedTime}
-        />
+          <View style={styles.stepContainer}>
+            <View style={styles.stepNumber}>
+              <Text style={styles.stepNumberText}>3</Text>
+            </View>
+            <View style={styles.stepContent}>
+              <Text style={styles.stepTitle}>Compareça no horário</Text>
+              <Text style={styles.stepDescription}>
+                Leve seu pet no dia e horário confirmados
+              </Text>
+            </View>
+          </View>
+        </View>
       </ScrollView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  backButton: {
-    position: "absolute",
-    top: 50,
-    left: 16,
-    zIndex: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  imageContainer: {
-    alignItems: "center",
-    marginTop: 20,
-  },
-  headerImage: {
-    width: 180,
-    height: 180,
-    resizeMode: "contain",
-  },
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#F8F9FA'
+    backgroundColor: "#F8F9FA",
   },
   logoutButton: {
     position: "absolute",
@@ -213,77 +150,126 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  meusAgendamentosButton: {
-    flexDirection: "row",
+  header: {
     alignItems: "center",
-    justifyContent: "center",
+    paddingTop: 80,
+    paddingHorizontal: 20,
+    paddingBottom: 32,
     backgroundColor: "#fff",
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 20,
-    gap: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  meusAgendamentosText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: theme.colors.primary,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: theme.colors.text,
-    marginBottom: 12,
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 3,
   },
-  horariosContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
+  headerImage: {
+    width: 150,
+    height: 150,
+    marginBottom: 16,
   },
-  timeButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: theme.colors.grey,
-    backgroundColor: "#fff",
-    minWidth: 75,
-    alignItems: "center",
-  },
-  timeButtonSelected: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  timeText: {
-    color: theme.colors.text,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  timeTextSelected: {
-    color: "#fff",
+  welcomeText: {
+    fontSize: 24,
     fontWeight: "700",
-  },
-  noSlotsText: {
-    textAlign: "center",
     color: theme.colors.text,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+  },
+  actionsContainer: {
+    padding: 20,
+    gap: 16,
+  },
+  actionCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  primaryCard: {
+    backgroundColor: theme.colors.primary,
+  },
+  actionIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  secondaryIcon: {
+    backgroundColor: `${theme.colors.primary}15`,
+  },
+  actionTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: theme.colors.text,
+    marginBottom: 8,
+  },
+  actionDescription: {
     fontSize: 14,
-    paddingVertical: 20,
+    color: "#666",
+    textAlign: "center",
+  },
+  infoSection: {
+    padding: 20,
+    backgroundColor: "#fff",
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  infoTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: theme.colors.text,
+    marginBottom: 20,
+  },
+  stepContainer: {
+    flexDirection: "row",
+    marginBottom: 20,
+    alignItems: "flex-start",
+  },
+  stepNumber: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  stepNumberText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  stepContent: {
+    flex: 1,
+  },
+  stepTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: theme.colors.text,
+    marginBottom: 4,
+  },
+  stepDescription: {
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20,
   },
 });

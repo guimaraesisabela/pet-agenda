@@ -1,11 +1,9 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { getFirestore } from "firebase/firestore";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+console.log('🔥 [Firebase] Iniciando configuração do Firebase...');
+
 const firebaseConfig = {
   apiKey: "AIzaSyDo-BkCbXQxp3AxCN2KQSeds_7-WbZsMfk",
   authDomain: "augenda-pet.firebaseapp.com",
@@ -16,8 +14,23 @@ const firebaseConfig = {
   measurementId: "G-KJENFC6Q34"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+console.log('🔥 [Firebase] Configuração:', {
+  projectId: firebaseConfig.projectId,
+  authDomain: firebaseConfig.authDomain
+});
 
-export { app, auth };
+console.log('🔥 [Firebase] Inicializando app...');
+const app = initializeApp(firebaseConfig);
+console.log('🔥 [Firebase] App inicializado com sucesso');
+
+console.log('🔥 [Firebase] Inicializando Auth...');
+const auth = getAuth(app);
+console.log('🔥 [Firebase] Auth inicializado com sucesso');
+
+console.log('🔥 [Firebase] Inicializando Firestore...');
+const db = getFirestore(app);
+console.log('🔥 [Firebase] Firestore inicializado com sucesso');
+
+console.log('🔥 [Firebase] Configuração completa!');
+
+export { app, auth, db };

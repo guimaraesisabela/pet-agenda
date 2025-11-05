@@ -1,9 +1,8 @@
 import { theme } from "@/components/theme/theme";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter } from "expo-router";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { useEffect, useState } from "react";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { useState } from "react";
 import {
   Image,
   Modal,
@@ -15,10 +14,12 @@ import {
   View,
 } from "react-native";
 import { auth } from "../../services/firebase";
+import { userService } from "../../services/userService";
 
 export default function CadastroScreen() {
-  console.log("CadastroScreen rendered");
-  const [role, setRole] = useState<"usuario" | "gestor">("usuario");
+  console.log('📝 [Cadastro] Tela renderizada');
+  
+  const [role, setRole] = useState<"tutor" | "gestor">("tutor");
   const router = useRouter();
 
   const [nome, setNome] = useState("");
@@ -35,37 +36,121 @@ export default function CadastroScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [modalType, setModalType] = useState<"error" | "warning">("error");
-
-  useEffect(() => {
-    setRole("usuario");
-  }, []);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleCadastro = async () => {
-    console.log("handleCadastro called");
+    console.log('📝 [Cadastro] handleCadastro iniciado');
+    console.log('📝 [Cadastro] Role selecionado:', role);
+    console.log('📝 [Cadastro] Dados do formulário:', {
+      nome,
+      email,
+      hasPassword: !!senha,
+      nomePet: role === 'tutor' ? nomePet : 'N/A',
+      petshop: role === 'gestor' ? petshop : 'N/A'
+    });
+    
+    if (!nome || !email || !senha || !confirmarSenha) {
+      console.log('⚠️ [Cadastro] Campos obrigatórios não preenchidos');
+      setModalMessage("Por favor, preencha todos os campos obrigatórios!");
+      setModalType("warning");
+      setModalVisible(true);
+      return;
+    }
+
     if (senha !== confirmarSenha) {
+      console.log('⚠️ [Cadastro] Senhas não coincidem');
       setModalMessage("As senhas não coincidem!");
       setModalType("warning");
       setModalVisible(true);
       return;
     }
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-      
-      // Salva o role no AsyncStorage
-      await AsyncStorage.setItem(`@user_role_${userCredential.user.uid}`, role);
+    if (senha.length < 6) {
+      console.log('⚠️ [Cadastro] Senha muito curta');
+      setModalMessage("A senha deve ter pelo menos 6 caracteres!");
+      setModalType("warning");
+      setModalVisible(true);
+      return;
+    }
 
-      // Redireciona baseado no role
+    if (role === "tutor" && (!nomePet || !especie)) {
+      console.log('⚠️ [Cadastro] Dados do pet não preenchidos');
+      setModalMessage("Por favor, preencha os dados do seu pet!");
+      setModalType("warning");
+      setModalVisible(true);
+      return;
+    }
+
+    if (role === "gestor" && (!petshop || !unidade)) {
+      console.log('⚠️ [Cadastro] Dados do petshop não preenchidos');
+      setModalMessage("Por favor, preencha os dados do petshop!");
+      setModalType("warning");
+      setModalVisible(true);
+      return;
+    }
+
+    console.log('📝 [Cadastro] Todas as validações passaram, iniciando processo de cadastro...');
+    setIsLoading(true);
+    
+    try {
+      console.log('📝 [Cadastro] Criando usuário no Firebase Auth...');
+      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+      console.log('✅ [Cadastro] Usuário criado no Auth com sucesso!', {
+        uid: userCredential.user.uid,
+        email: userCredential.user.email
+      });
+      
+      console.log('📝 [Cadastro] Atualizando displayName...');
+      await updateProfile(userCredential.user, {
+        displayName: nome,
+      });
+      console.log('✅ [Cadastro] DisplayName atualizado');
+
+      console.log('📝 [Cadastro] Salvando dados no Firestore...');
+      const userData = {
+        uid: userCredential.user.uid,
+        email: email,
+        displayName: nome,
+        role: role,
+      };
+      console.log('📝 [Cadastro] Dados a serem salvos:', userData);
+      
+      await userService.createUser(userData);
+      console.log('✅ [Cadastro] Dados salvos no Firestore com sucesso!');
+
+      console.log('📝 [Cadastro] Cadastro completo! Redirecionando baseado no role:', role);
+
       if (role === "gestor") {
+        console.log('📝 [Cadastro] Redirecionando para /agendamento-gestor');
         router.replace("/(app)/agendamento-gestor");
       } else {
+        console.log('📝 [Cadastro] Redirecionando para /agendamento');
         router.replace("/(app)/agendamento");
       }
-    } catch (error) {
-      setModalMessage("Erro ao cadastrar. Tente novamente.");
+    } catch (error: any) {
+      console.error('❌ [Cadastro] Erro no processo de cadastro:', error);
+      console.error('❌ [Cadastro] Código do erro:', error.code);
+      console.error('❌ [Cadastro] Mensagem:', error.message);
+      
+      let errorMessage = "Erro ao cadastrar. Tente novamente.";
+      
+      if (error.code === "auth/email-already-in-use") {
+        errorMessage = "Este e-mail já está em uso!";
+        console.log('⚠️ [Cadastro] E-mail já em uso');
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "E-mail inválido!";
+        console.log('⚠️ [Cadastro] E-mail inválido');
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "Senha muito fraca!";
+        console.log('⚠️ [Cadastro] Senha fraca');
+      }
+      
+      setModalMessage(errorMessage);
       setModalType("error");
       setModalVisible(true);
-      console.error(error);
+    } finally {
+      console.log('📝 [Cadastro] Finalizando processo (setIsLoading false)');
+      setIsLoading(false);
     }
   };
 
@@ -75,7 +160,11 @@ export default function CadastroScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => {
+            console.log('📝 [Cadastro] Botão voltar pressionado');
+            router.back();
+          }}
+          disabled={isLoading}
         >
           <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
@@ -97,15 +186,19 @@ export default function CadastroScreen() {
           <TouchableOpacity
             style={[
               styles.roleButton,
-              role === "usuario" && styles.roleButtonActiveUsuario,
-              role !== "usuario" && styles.roleButtonInactive,
+              role === "tutor" && styles.roleButtonActiveUsuario,
+              role !== "tutor" && styles.roleButtonInactive,
             ]}
-            onPress={() => setRole("usuario")}
+            onPress={() => {
+              console.log('📝 [Cadastro] Role alterado para: tutor');
+              setRole("tutor");
+            }}
+            disabled={isLoading}
           >
             <Text
               style={[
                 styles.roleButtonText,
-                role === "usuario" && styles.roleButtonTextActive,
+                role === "tutor" && styles.roleButtonTextActive,
               ]}
             >
               Sou Tutor
@@ -118,7 +211,11 @@ export default function CadastroScreen() {
               role === "gestor" && styles.roleButtonActiveGestor,
               role !== "gestor" && styles.roleButtonInactive,
             ]}
-            onPress={() => setRole("gestor")}
+            onPress={() => {
+              console.log('📝 [Cadastro] Role alterado para: gestor');
+              setRole("gestor");
+            }}
+            disabled={isLoading}
           >
             <Text
               style={[
@@ -136,6 +233,7 @@ export default function CadastroScreen() {
           placeholder="Nome completo"
           value={nome}
           onChangeText={setNome}
+          editable={!isLoading}
         />
 
         <TextInput
@@ -145,14 +243,16 @@ export default function CadastroScreen() {
           onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
+          editable={!isLoading}
         />
 
         <TextInput
           style={styles.input}
-          placeholder="Senha"
+          placeholder="Senha (mínimo 6 caracteres)"
           value={senha}
           onChangeText={setSenha}
           secureTextEntry
+          editable={!isLoading}
         />
 
         <TextInput
@@ -161,6 +261,7 @@ export default function CadastroScreen() {
           value={confirmarSenha}
           onChangeText={setConfirmarSenha}
           secureTextEntry
+          editable={!isLoading}
         />
 
         {role === "gestor" ? (
@@ -170,12 +271,14 @@ export default function CadastroScreen() {
               placeholder="Nome do Petshop"
               value={petshop}
               onChangeText={setPetshop}
+              editable={!isLoading}
             />
             <TextInput
               style={styles.input}
               placeholder="Unidade"
               value={unidade}
               onChangeText={setUnidade}
+              editable={!isLoading}
             />
           </>
         ) : (
@@ -185,23 +288,37 @@ export default function CadastroScreen() {
               placeholder="Nome do pet"
               value={nomePet}
               onChangeText={setNomePet}
+              editable={!isLoading}
             />
             <TextInput
               style={styles.input}
               placeholder="Espécie (gato, cachorro...)"
               value={especie}
               onChangeText={setEspecie}
+              editable={!isLoading}
             />
           </>
         )}
 
-        <TouchableOpacity style={styles.button} onPress={handleCadastro}>
-          <Text style={styles.buttonText}>Cadastrar</Text>
+        <TouchableOpacity 
+          style={[styles.button, isLoading && styles.buttonDisabled]} 
+          onPress={handleCadastro}
+          disabled={isLoading}
+        >
+          <Text style={styles.buttonText}>
+            {isLoading ? "Cadastrando..." : "Cadastrar"}
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.loginRow}>
           <Text style={styles.loginText}>Já tem uma conta?</Text>
-          <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
+          <TouchableOpacity 
+            onPress={() => {
+              console.log('📝 [Cadastro] Navegando para login');
+              router.push("/(auth)/login");
+            }}
+            disabled={isLoading}
+          >
             <Text style={styles.loginLink}> Fazer Login</Text>
           </TouchableOpacity>
         </View>
@@ -237,7 +354,10 @@ export default function CadastroScreen() {
 
               <TouchableOpacity
                 style={styles.modalButton}
-                onPress={() => setModalVisible(false)}
+                onPress={() => {
+                  console.log('📝 [Cadastro] Modal fechado');
+                  setModalVisible(false);
+                }}
               >
                 <Text style={styles.modalButtonText}>OK</Text>
               </TouchableOpacity>
@@ -328,6 +448,9 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 8,
   },
+  buttonDisabled: {
+    backgroundColor: "#ccc",
+  },
   buttonText: {
     color: theme.colors.background,
     fontSize: 16,
@@ -386,7 +509,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   modalContainerWarning: {
-    backgroundColor: "#FFF4E6", 
+    backgroundColor: "#FFF4E6",
   },
   iconContainer: {
     width: 70,
