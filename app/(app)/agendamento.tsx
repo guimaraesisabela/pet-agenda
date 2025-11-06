@@ -55,14 +55,14 @@ export default function AgendamentoScreen() {
             style={[styles.actionCard, styles.primaryCard]}
             onPress={() => {
               console.log('🏠 [Agendamento] Navegando para tela de novo agendamento');
-              router.push("/schedule");
+              router.push("/(app)/schedule");
             }}
           >
             <View style={styles.actionIconContainer}>
               <Ionicons name="add-circle" size={48} color="#fff" />
             </View>
-            <Text style={styles.actionTitle}>Novo Agendamento</Text>
-            <Text style={styles.actionDescription}>
+            <Text style={[styles.actionTitle, styles.primaryText]}>Novo Agendamento</Text>
+            <Text style={[styles.actionDescription, styles.primaryText]}>
               Agende um serviço para seu pet
             </Text>
           </TouchableOpacity>
@@ -70,8 +70,8 @@ export default function AgendamentoScreen() {
           <TouchableOpacity
             style={styles.actionCard}
             onPress={() => {
-              console.log('🏠 [Agendamento] Navegando para meus agendamentos');
-              router.push("/my-appointments");
+              console.log('🏠 [Agendamento] Navegando para agendamento-usuario');
+              router.push("/(app)/agendamento-usuario");
             }}
           >
             <View style={[styles.actionIconContainer, styles.secondaryIcon]}>
@@ -215,6 +215,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: theme.colors.text,
     marginBottom: 8,
+  },
+  primaryText: {
+    color: "#fff",
   },
   actionDescription: {
     fontSize: 14,

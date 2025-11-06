@@ -1,8 +1,11 @@
 import { theme } from "@/components/theme/theme";
+import { useAuth } from "@/contexts/AuthContext";
+import { Appointment, appointmentService } from "@/services/appointmentService";
 import { Ionicons } from "@expo/vector-icons";
-import { router, Stack } from "expo-router";
-import { useState } from "react";
+import { router, Stack, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import {
+  ActivityIndicator,
   Modal,
   ScrollView,
   StyleSheet,
@@ -11,112 +14,96 @@ import {
   View,
 } from "react-native";
 
-interface Agendamento {
-  id: number;
-  petNome: string;
-  petEspecie: string;
-  servico: string;
-  data: string;
-  horario: string;
-  status: "agendado" | "confirmado" | "concluido" | "cancelado";
-  observacoes?: string;
-}
-
 export default function MeusAgendamentosScreen() {
-  console.log('MeusAgendamentosScreen rendered');
-  const [activeTab, setActiveTab] = useState<"proximos" | "historico">(
-    "proximos"
-  );
-  const [selectedAgendamento, setSelectedAgendamento] =
-    useState<Agendamento | null>(null);
+  console.log('📋 [MeusAgendamentos] Tela renderizada');
+  
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<"proximos" | "historico">("proximos");
+  const [selectedAgendamento, setSelectedAgendamento] = useState<Appointment | null>(null);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
-  const [cancelModalVisible, setCancelModalVisible] = useState(false);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const agendamentos: Agendamento[] = [
-    {
-      id: 1,
-      petNome: "Rex",
-      petEspecie: "Cachorro",
-      servico: "Banho e Tosa Completa",
-      data: "2025-11-15",
-      horario: "10:00",
-      status: "confirmado",
-      observacoes: "Rex tem medo de secador",
-    },
-    {
-      id: 2,
-      petNome: "Mimi",
-      petEspecie: "Gato",
-      servico: "Consulta Veterinária",
-      data: "2025-11-20",
-      horario: "14:30",
-      status: "agendado",
-    },
-    {
-      id: 3,
-      petNome: "Bob",
-      petEspecie: "Cachorro",
-      servico: "Vacinação",
-      data: "2025-11-25",
-      horario: "09:00",
-      status: "agendado",
-    },
-    {
-      id: 4,
-      petNome: "Luna",
-      petEspecie: "Gato",
-      servico: "Tosa Higiênica",
-      data: "2025-10-10",
-      horario: "11:00",
-      status: "concluido",
-    },
-    {
-      id: 5,
-      petNome: "Thor",
-      petEspecie: "Cachorro",
-      servico: "Banho",
-      data: "2025-10-05",
-      horario: "15:00",
-      status: "concluido",
-    },
-  ];
+  const loadAppointments = useCallback(async () => {
+    if (!user) {
+      console.log('⚠️ [MeusAgendamentos] Usuário não autenticado');
+      return;
+    }
+
+    console.log('📋 [MeusAgendamentos] Carregando agendamentos do tutor:', user.uid);
+    setLoading(true);
+    
+    try {
+      const data = await appointmentService.getTutorAppointments(user.uid);
+      console.log('✅ [MeusAgendamentos] Agendamentos carregados:', data.length);
+      console.log('📋 [MeusAgendamentos] Dados:', data);
+      setAppointments(data);
+    } catch (error) {
+      console.error('❌ [MeusAgendamentos] Erro ao carregar agendamentos:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('📋 [MeusAgendamentos] Tela focada, recarregando dados');
+      loadAppointments();
+    }, [loadAppointments])
+  );
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const proximos = agendamentos.filter((ag) => {
-    const agData = new Date(ag.data);
+  const proximos = appointments.filter((ag) => {
+    const agData = new Date(ag.dateTime);
     return (
-      agData >= today && ag.status !== "cancelado" && ag.status !== "concluido"
+      agData >= today && 
+      ag.status !== "rejected" && 
+      ag.status !== "completed"
     );
   });
 
-  const historico = agendamentos.filter((ag) => {
-    const agData = new Date(ag.data);
+  const historico = appointments.filter((ag) => {
+    const agData = new Date(ag.dateTime);
     return (
-      agData < today || ag.status === "cancelado" || ag.status === "concluido"
+      agData < today || 
+      ag.status === "rejected" || 
+      ag.status === "completed"
     );
+  });
+
+  console.log('📋 [MeusAgendamentos] Filtrados:', {
+    total: appointments.length,
+    proximos: proximos.length,
+    historico: historico.length,
+    activeTab
   });
 
   const agendamentosExibidos = activeTab === "proximos" ? proximos : historico;
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = (date: Date) => {
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
 
+  const formatTime = (date: Date) => {
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "confirmado":
+      case "confirmed":
         return "#4CAF50";
-      case "agendado":
+      case "pending":
         return theme.colors.secondary;
-      case "concluido":
+      case "completed":
         return "#9E9E9E";
-      case "cancelado":
+      case "rejected":
         return "#F44336";
       default:
         return theme.colors.grey;
@@ -125,42 +112,41 @@ export default function MeusAgendamentosScreen() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "confirmado":
+      case "confirmed":
         return "Confirmado";
-      case "agendado":
-        return "Agendado";
-      case "concluido":
+      case "pending":
+        return "Pendente";
+      case "completed":
         return "Concluído";
-      case "cancelado":
+      case "rejected":
         return "Cancelado";
       default:
         return status;
     }
   };
 
-  const getIconName = (especie: string) => {
-    if (especie.toLowerCase().includes("gato")) return "🐱";
-    if (especie.toLowerCase().includes("cachorro")) return "🐕";
-    if (especie.toLowerCase().includes("coelho")) return "🐰";
-    if (especie.toLowerCase().includes("passaro")) return "🐦";
+  const getIconName = (petName: string) => {
+    // Você pode adicionar lógica aqui para retornar diferentes ícones
     return "🐾";
   };
 
-  const handleCancelAgendamento = () => {
-    console.log("Cancelando agendamento:", selectedAgendamento?.id);
-    setCancelModalVisible(false);
-    setSelectedAgendamento(null);
-  };
-
-  const openDetails = (agendamento: Agendamento) => {
+  const openDetails = (agendamento: Appointment) => {
+    console.log('📋 [MeusAgendamentos] Abrindo detalhes do agendamento:', agendamento.id);
     setSelectedAgendamento(agendamento);
     setDetailsModalVisible(true);
   };
 
-  const openCancelModal = (agendamento: Agendamento) => {
-    setSelectedAgendamento(agendamento);
-    setCancelModalVisible(true);
-  };
+  if (loading) {
+    return (
+      <>
+        <Stack.Screen options={{ title: "Meus Agendamentos" }} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Carregando agendamentos...</Text>
+        </View>
+      </>
+    );
+  }
 
   return (
     <>
@@ -168,14 +154,21 @@ export default function MeusAgendamentosScreen() {
       <View style={styles.container}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => {
+            console.log('📋 [MeusAgendamentos] Voltando');
+            router.back();
+          }}
         >
           <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
+        
         <View style={styles.tabContainer}>
           <TouchableOpacity
             style={[styles.tab, activeTab === "proximos" && styles.tabActive]}
-            onPress={() => setActiveTab("proximos")}
+            onPress={() => {
+              console.log('📋 [MeusAgendamentos] Tab alterada para: proximos');
+              setActiveTab("proximos");
+            }}
           >
             <Text
               style={[
@@ -189,7 +182,10 @@ export default function MeusAgendamentosScreen() {
 
           <TouchableOpacity
             style={[styles.tab, activeTab === "historico" && styles.tabActive]}
-            onPress={() => setActiveTab("historico")}
+            onPress={() => {
+              console.log('📋 [MeusAgendamentos] Tab alterada para: historico');
+              setActiveTab("historico");
+            }}
           >
             <Text
               style={[
@@ -209,11 +205,11 @@ export default function MeusAgendamentosScreen() {
                 <View style={styles.cardHeader}>
                   <View style={styles.petInfo}>
                     <Text style={styles.petIcon}>
-                      {getIconName(agendamento.petEspecie)}
+                      {getIconName(agendamento.petName)}
                     </Text>
                     <View>
-                      <Text style={styles.petNome}>{agendamento.petNome}</Text>
-                      <Text style={styles.servico}>{agendamento.servico}</Text>
+                      <Text style={styles.petNome}>{agendamento.petName}</Text>
+                      <Text style={styles.servico}>{agendamento.service}</Text>
                     </View>
                   </View>
                   <View
@@ -232,12 +228,14 @@ export default function MeusAgendamentosScreen() {
                   <View style={styles.infoRow}>
                     <Ionicons name="calendar-outline" size={16} color="#666" />
                     <Text style={styles.infoText}>
-                      {formatDate(agendamento.data)}
+                      {formatDate(agendamento.dateTime)}
                     </Text>
                   </View>
                   <View style={styles.infoRow}>
                     <Ionicons name="time-outline" size={16} color="#666" />
-                    <Text style={styles.infoText}>{agendamento.horario}</Text>
+                    <Text style={styles.infoText}>
+                      {formatTime(agendamento.dateTime)}
+                    </Text>
                   </View>
                 </View>
 
@@ -248,16 +246,6 @@ export default function MeusAgendamentosScreen() {
                   >
                     <Text style={styles.detailsButtonText}>Ver Detalhes</Text>
                   </TouchableOpacity>
-
-                  {agendamento.status !== "cancelado" &&
-                    agendamento.status !== "concluido" && (
-                      <TouchableOpacity
-                        style={styles.cancelButton}
-                        onPress={() => openCancelModal(agendamento)}
-                      >
-                        <Text style={styles.cancelButtonText}>Cancelar</Text>
-                      </TouchableOpacity>
-                    )}
                 </View>
               </View>
             ))
@@ -283,7 +271,10 @@ export default function MeusAgendamentosScreen() {
             <View style={styles.modalContainer}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Detalhes do Agendamento</Text>
-                <TouchableOpacity onPress={() => setDetailsModalVisible(false)}>
+                <TouchableOpacity onPress={() => {
+                  console.log('📋 [MeusAgendamentos] Fechando modal de detalhes');
+                  setDetailsModalVisible(false);
+                }}>
                   <Ionicons name="close" size={24} color={theme.colors.text} />
                 </TouchableOpacity>
               </View>
@@ -293,29 +284,28 @@ export default function MeusAgendamentosScreen() {
                   <View style={styles.modalRow}>
                     <Text style={styles.modalLabel}>Pet:</Text>
                     <Text style={styles.modalValue}>
-                      {selectedAgendamento.petNome} (
-                      {selectedAgendamento.petEspecie})
+                      {selectedAgendamento.petName}
                     </Text>
                   </View>
 
                   <View style={styles.modalRow}>
                     <Text style={styles.modalLabel}>Serviço:</Text>
                     <Text style={styles.modalValue}>
-                      {selectedAgendamento.servico}
+                      {selectedAgendamento.service}
                     </Text>
                   </View>
 
                   <View style={styles.modalRow}>
                     <Text style={styles.modalLabel}>Data:</Text>
                     <Text style={styles.modalValue}>
-                      {formatDate(selectedAgendamento.data)}
+                      {formatDate(selectedAgendamento.dateTime)}
                     </Text>
                   </View>
 
                   <View style={styles.modalRow}>
                     <Text style={styles.modalLabel}>Horário:</Text>
                     <Text style={styles.modalValue}>
-                      {selectedAgendamento.horario}
+                      {formatTime(selectedAgendamento.dateTime)}
                     </Text>
                   </View>
 
@@ -337,11 +327,11 @@ export default function MeusAgendamentosScreen() {
                     </View>
                   </View>
 
-                  {selectedAgendamento.observacoes && (
-                    <View style={styles.modalRow}>
-                      <Text style={styles.modalLabel}>Observações:</Text>
-                      <Text style={styles.modalValue}>
-                        {selectedAgendamento.observacoes}
+                  {selectedAgendamento.gestorNotes && (
+                    <View style={styles.modalRowVertical}>
+                      <Text style={styles.modalLabel}>Observações do Gestor:</Text>
+                      <Text style={styles.modalValueFull}>
+                        {selectedAgendamento.gestorNotes}
                       </Text>
                     </View>
                   )}
@@ -357,48 +347,27 @@ export default function MeusAgendamentosScreen() {
             </View>
           </View>
         </Modal>
-
-        <Modal
-          visible={cancelModalVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setCancelModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>Cancelar Agendamento</Text>
-              <Text style={styles.cancelWarning}>
-                Tem certeza que deseja cancelar este agendamento?
-              </Text>
-
-              <View style={styles.cancelButtons}>
-                <TouchableOpacity
-                  style={styles.cancelNoButton}
-                  onPress={() => setCancelModalVisible(false)}
-                >
-                  <Text style={styles.cancelNoButtonText}>Não</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.cancelYesButton}
-                  onPress={handleCancelAgendamento}
-                >
-                  <Text style={styles.cancelYesButtonText}>Sim, Cancelar</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
       </View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#666",
+  },
   backButton: {
     position: "absolute",
-    top: 25,
-    left: 10,
+    top: 50,
+    left: 16,
     zIndex: 10,
     width: 40,
     height: 40,
@@ -415,7 +384,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#E8E8E8",
-    paddingTop: 45,
+    paddingTop: 60,
   },
   tab: {
     flex: 1,
@@ -518,18 +487,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: theme.colors.pink,
-    alignItems: "center",
-  },
-  cancelButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
-  },
   emptyContainer: {
     flex: 1,
     alignItems: "center",
@@ -574,6 +531,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  modalRowVertical: {
+    gap: 8,
+  },
   modalLabel: {
     fontSize: 14,
     fontWeight: "600",
@@ -585,6 +545,11 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "right",
   },
+  modalValueFull: {
+    fontSize: 14,
+    color: theme.colors.text,
+    lineHeight: 20,
+  },
   closeButton: {
     backgroundColor: theme.colors.primary,
     paddingVertical: 12,
@@ -593,41 +558,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   closeButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  cancelWarning: {
-    fontSize: 16,
-    color: theme.colors.text,
-    textAlign: "center",
-    marginVertical: 20,
-  },
-  cancelButtons: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  cancelNoButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: theme.colors.grey,
-    alignItems: "center",
-  },
-  cancelNoButtonText: {
-    color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  cancelYesButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    backgroundColor: theme.colors.pink,
-    alignItems: "center",
-  },
-  cancelYesButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
