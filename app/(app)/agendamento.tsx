@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   headerImage: {
-    width: 150,
+    width: 220,
     height: 150,
     marginBottom: 16,
   },
